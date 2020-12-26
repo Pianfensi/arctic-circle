@@ -160,6 +160,7 @@ class Grid:
 
 
 if __name__ == '__main__':
+    print("Just press space bar to go through the states")
     grid = Grid()
     pygame.init()
     w, h = 600, 600
