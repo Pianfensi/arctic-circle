@@ -12,6 +12,25 @@ COLORS = {UP: (200, 200, 0), DOWN: (200, 0, 0), LEFT: (0, 0, 200), RIGHT: (0, 20
 EASING = 1 / 15
 
 
+def arrow_polygon(x, y, w, h, direction):
+    if direction == LEFT:
+        return ((x + w * 0.5, y + h * 0.1), (x + w * 0.4, y + h * 0.25), (x + w * 0.45, y + h * 0.25),
+                (x + w * 0.45, y + h * 0.9), (x + w * 0.55, y + h * 0.9), (x + w * 0.55, y + h * 0.25),
+                (x + w * 0.6, y + h * 0.25))
+    if direction == RIGHT:
+        return ((x + w * 0.5, y + h * 0.9), (x + w * 0.4, y + h * 0.75), (x + w * 0.45, y + h * 0.75),
+                (x + w * 0.45, y + h * 0.1), (x + w * 0.55, y + h * 0.1), (x + w * 0.55, y + h * 0.75),
+                (x + w * 0.6, y + h * 0.75))
+    if direction == UP:
+        return ((x + w * 0.1, y + h * 0.5), (x + w * 0.25, y + h * 0.6), (x + w * 0.25, y + h * 0.55),
+                (x + w * 0.9, y + h * 0.55), (x + w * 0.9, y + h * 0.45), (x + w * 0.25, y + h * 0.45),
+                (x + w * 0.25, y + h * 0.4))
+    if direction == DOWN:
+        return ((x + w * 0.9, y + h * 0.5), (x + w * 0.75, y + h * 0.6), (x + w * 0.75, y + h * 0.55),
+                (x + w * 0.1, y + h * 0.55), (x + w * 0.1, y + h * 0.45), (x + w * 0.75, y + h * 0.45),
+                (x + w * 0.75, y + h * 0.4))
+
+
 class Tile:
     tiles = {}
 
@@ -147,7 +166,7 @@ if __name__ == '__main__':
     print("Just press space bar to go through the states")
     grid = Grid()
     pygame.init()
-    w, h = 600, 600
+    w, h = 800, 800
     screen = pygame.display.set_mode((w, h))
     terminated = False
     clk = pygame.time.Clock()
@@ -202,14 +221,15 @@ if __name__ == '__main__':
                     tile = Tile.tiles[entry]
                     d_y, d_x = tile.direction
                     move_ease = easing
+                    x = (i - move_ease * d_x) * sq_length + offset_x
+                    y = (j - move_ease * d_y) * sq_length + offset_y
+                    t_w = sq_length * tile.width
+                    t_h = sq_length * tile.height
                     pygame.draw.rect(screen, tile.color,
-                                     pygame.Rect((i - move_ease * d_x) * sq_length + offset_x,
-                                                 (j - move_ease * d_y) * sq_length + offset_y, sq_length * tile.width,
-                                                 sq_length * tile.height))
+                                     pygame.Rect(x, y, t_w, t_h))
                     pygame.draw.rect(screen, (0, 0, 0),
-                                     pygame.Rect((i - move_ease * d_x) * sq_length + offset_x,
-                                                 (j - move_ease * d_y) * sq_length + offset_y, sq_length * tile.width,
-                                                 sq_length * tile.height), 1)
+                                     pygame.Rect(x, y, t_w, t_h), 1)
+                    pygame.draw.polygon(screen, (0, 0, 0), arrow_polygon(x, y, t_w, t_h, tile.direction))
                     already_drawn.append(entry)
 
         pygame.display.flip()
