@@ -13,22 +13,24 @@ EASING = 1 / 15
 
 
 def arrow_polygon(x, y, w, h, direction):
+    path = None
     if direction == LEFT:
-        return ((x + w * 0.5, y + h * 0.1), (x + w * 0.4, y + h * 0.25), (x + w * 0.45, y + h * 0.25),
+        path = ((x + w * 0.5, y + h * 0.1), (x + w * 0.4, y + h * 0.25), (x + w * 0.45, y + h * 0.25),
                 (x + w * 0.45, y + h * 0.9), (x + w * 0.55, y + h * 0.9), (x + w * 0.55, y + h * 0.25),
                 (x + w * 0.6, y + h * 0.25))
     if direction == RIGHT:
-        return ((x + w * 0.5, y + h * 0.9), (x + w * 0.4, y + h * 0.75), (x + w * 0.45, y + h * 0.75),
+        path = ((x + w * 0.5, y + h * 0.9), (x + w * 0.4, y + h * 0.75), (x + w * 0.45, y + h * 0.75),
                 (x + w * 0.45, y + h * 0.1), (x + w * 0.55, y + h * 0.1), (x + w * 0.55, y + h * 0.75),
                 (x + w * 0.6, y + h * 0.75))
     if direction == UP:
-        return ((x + w * 0.1, y + h * 0.5), (x + w * 0.25, y + h * 0.6), (x + w * 0.25, y + h * 0.55),
+        path = ((x + w * 0.1, y + h * 0.5), (x + w * 0.25, y + h * 0.6), (x + w * 0.25, y + h * 0.55),
                 (x + w * 0.9, y + h * 0.55), (x + w * 0.9, y + h * 0.45), (x + w * 0.25, y + h * 0.45),
                 (x + w * 0.25, y + h * 0.4))
     if direction == DOWN:
-        return ((x + w * 0.9, y + h * 0.5), (x + w * 0.75, y + h * 0.6), (x + w * 0.75, y + h * 0.55),
+        path = ((x + w * 0.9, y + h * 0.5), (x + w * 0.75, y + h * 0.6), (x + w * 0.75, y + h * 0.55),
                 (x + w * 0.1, y + h * 0.55), (x + w * 0.1, y + h * 0.45), (x + w * 0.75, y + h * 0.45),
                 (x + w * 0.75, y + h * 0.4))
+    return tuple([(int(x), int(y)) for x, y in path])
 
 
 class Tile:
@@ -201,14 +203,11 @@ if __name__ == '__main__':
         for j in range(grid.size):
             for i in range(grid.size):
                 entry = grid()[i, j]
-                if entry == 0:
-                    pygame.draw.rect(screen, (0, 0, 0),
-                                     pygame.Rect(i * sq_length + offset_x, j * sq_length + offset_y, sq_length,
-                                                 sq_length))
-                else:
+                if entry >= 1:
                     pygame.draw.rect(screen, (255, 255, 255),
-                                     pygame.Rect(i * sq_length + offset_x, j * sq_length + offset_y, sq_length,
-                                                 sq_length))
+                                     pygame.Rect(int(i * sq_length + offset_x), int(j * sq_length + offset_y),
+                                                 int(sq_length),
+                                                 int(sq_length)))
 
         if easing > 0:
             easing -= EASING
@@ -221,14 +220,13 @@ if __name__ == '__main__':
                     tile = Tile.tiles[entry]
                     d_y, d_x = tile.direction
                     move_ease = easing
-                    x = (i - move_ease * d_x) * sq_length + offset_x
-                    y = (j - move_ease * d_y) * sq_length + offset_y
-                    t_w = sq_length * tile.width
-                    t_h = sq_length * tile.height
-                    pygame.draw.rect(screen, tile.color,
-                                     pygame.Rect(x, y, t_w, t_h))
-                    pygame.draw.rect(screen, (0, 0, 0),
-                                     pygame.Rect(x, y, t_w, t_h), 1)
+                    x = int((i - move_ease * d_x) * sq_length + offset_x)
+                    y = int((j - move_ease * d_y) * sq_length + offset_y)
+                    t_w = int(sq_length * tile.width)
+                    t_h = int(sq_length * tile.height)
+                    pygame.draw.polygon(screen, tile.color, ((x, y), (x + t_w, y), (x + t_w, y + t_h), (x, y + t_h)))
+                    pygame.draw.lines(screen, (0, 0, 0), True, ((x, y), (x + t_w, y), (x + t_w, y + t_h), (x, y + t_h)),
+                                      2)
                     pygame.draw.polygon(screen, (50, 50, 50), arrow_polygon(x, y, t_w, t_h, tile.direction))
                     already_drawn.append(entry)
 
