@@ -25,7 +25,7 @@ class Tile:
         self._h = 1
         self._ease = 0
         self._moving = False
-        if direction in (UP, DOWN):
+        if direction in (LEFT, RIGHT):
             self._w = 2
         else:
             self._h = 2
@@ -67,6 +67,8 @@ class Grid:
     def __init__(self):
         self._grid = np.ones((2, 2))
         self.set_new_tiles()
+        self._block_free_grid = None
+        self._new_grid = None
 
     def _set_new_tile(self, x, y):
         if random.choice(COMBINATION) == "v":
@@ -85,10 +87,11 @@ class Grid:
         else:
             self._grid[tile.y:tile.y + 1, tile.x:tile.x + 2] = np.ones((1, 2)) * tile.id
 
-    def move_tiles(self):
+    def remove_collision(self):
         n = self._grid.shape[0]
-        new_grid = self._grid.copy()
-        new_grid = np.vectorize(lambda x: min(max(0, x), 1))(new_grid)
+        self._new_grid = self._grid.copy()
+        self._new_grid = np.where(self._new_grid >= 1, 1, 0)
+        self._block_free_grid = self._new_grid.copy()
         for y in range(n):
             for x in range(n):
                 tile_id = int(self._grid[y, x])
@@ -104,8 +107,12 @@ class Grid:
                                                                                    (LEFT, RIGHT), (RIGHT, LEFT)]:
                             blocked = True
                     if not blocked:
-                        new_grid[destination] = tile_id
-        self._grid = new_grid
+                        self._block_free_grid[y, x] = tile_id
+                        self._new_grid[destination] = tile_id
+        self._grid = self._block_free_grid
+
+    def move_tiles(self):
+        self._grid = self._new_grid
 
     def set_new_tiles(self):
         n = self._grid.shape[0]
@@ -144,7 +151,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode((w, h))
     terminated = False
     clk = pygame.time.Clock()
-    action_cycle = ["evolve", "move", "remove"]
+    action_cycle = ["evolve", "unblock", "move", "insert"]
     action = 0
     moving = False
     easing = 0
@@ -158,11 +165,13 @@ if __name__ == '__main__':
                 if easing == 0:
                     if action_cycle[action] == "evolve":
                         grid.evolve()
-                    elif action_cycle[action] == "remove":
-                        grid.set_new_tiles()
+                    elif action_cycle[action] == "unblock":
+                        grid.remove_collision()
                     elif action_cycle[action] == "move":
                         grid.move_tiles()
                         easing = 1
+                    elif action_cycle[action] == "insert":
+                        grid.set_new_tiles()
                     action += 1
                     action %= len(action_cycle)
 
@@ -174,28 +183,34 @@ if __name__ == '__main__':
             for i in range(grid.size):
                 entry = grid()[i, j]
                 if entry == 0:
-                    pygame.draw.rect(screen, (0,0,0),
-                                 pygame.Rect(i * sq_length + offset_x, j * sq_length + offset_y, sq_length,
-                                             sq_length))
+                    pygame.draw.rect(screen, (0, 0, 0),
+                                     pygame.Rect(i * sq_length + offset_x, j * sq_length + offset_y, sq_length,
+                                                 sq_length))
                 else:
-                    pygame.draw.rect(screen, (255,255,255),
-                                 pygame.Rect(i * sq_length + offset_x, j * sq_length + offset_y, sq_length,
-                                             sq_length))
+                    pygame.draw.rect(screen, (255, 255, 255),
+                                     pygame.Rect(i * sq_length + offset_x, j * sq_length + offset_y, sq_length,
+                                                 sq_length))
 
         if easing > 0:
             easing -= EASING
             easing = max(easing, 0)
+        already_drawn = []
         for j in range(grid.size):
             for i in range(grid.size):
                 entry = grid()[i, j]
-                if entry > 1:
+                if entry > 1 and entry not in already_drawn:
                     tile = Tile.tiles[entry]
                     d_y, d_x = tile.direction
                     move_ease = easing
                     pygame.draw.rect(screen, tile.color,
-                                     pygame.Rect((i-move_ease*d_x) * sq_length + offset_x, (j-move_ease*d_y) * sq_length + offset_y, sq_length,
-                                                 sq_length))
-
+                                     pygame.Rect((i - move_ease * d_x) * sq_length + offset_x,
+                                                 (j - move_ease * d_y) * sq_length + offset_y, sq_length * tile.width,
+                                                 sq_length * tile.height))
+                    pygame.draw.rect(screen, (0, 0, 0),
+                                     pygame.Rect((i - move_ease * d_x) * sq_length + offset_x,
+                                                 (j - move_ease * d_y) * sq_length + offset_y, sq_length * tile.width,
+                                                 sq_length * tile.height), 1)
+                    already_drawn.append(entry)
 
         pygame.display.flip()
         clk.tick(30)
