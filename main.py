@@ -30,7 +30,7 @@ def arrow_polygon(x, y, w, h, direction):
         path = ((x + w * 0.9, y + h * 0.5), (x + w * 0.75, y + h * 0.6), (x + w * 0.75, y + h * 0.55),
                 (x + w * 0.1, y + h * 0.55), (x + w * 0.1, y + h * 0.45), (x + w * 0.75, y + h * 0.45),
                 (x + w * 0.75, y + h * 0.4))
-    return tuple([(int(x), int(y)) for x, y in path])
+    return tuple([(round(x), round(y)) for x, y in path])
 
 
 class Tile:
@@ -113,6 +113,7 @@ class Grid:
         self._new_grid = self._grid.copy()
         self._new_grid = np.where(self._new_grid >= 1, 1, 0)
         self._block_free_grid = self._new_grid.copy()
+        without_blocking = True
         for y in range(n):
             for x in range(n):
                 tile_id = int(self._grid[y, x])
@@ -127,10 +128,12 @@ class Grid:
                         if (origin_tile.direction, destination_tile.direction) in [(UP, DOWN), (DOWN, UP),
                                                                                    (LEFT, RIGHT), (RIGHT, LEFT)]:
                             blocked = True
+                            without_blocking = False
                     if not blocked:
                         self._block_free_grid[y, x] = tile_id
                         self._new_grid[destination] = tile_id
         self._grid = self._block_free_grid
+        return without_blocking
 
     def move_tiles(self):
         self._grid = self._new_grid
@@ -187,7 +190,10 @@ if __name__ == '__main__':
                     if action_cycle[action] == "evolve":
                         grid.evolve()
                     elif action_cycle[action] == "unblock":
-                        grid.remove_collision()
+                        if grid.remove_collision():
+                            grid.move_tiles()
+                            easing = 1
+                            action += 1
                     elif action_cycle[action] == "move":
                         grid.move_tiles()
                         easing = 1
@@ -205,9 +211,9 @@ if __name__ == '__main__':
                 entry = grid()[i, j]
                 if entry >= 1:
                     pygame.draw.rect(screen, (255, 255, 255),
-                                     pygame.Rect(int(i * sq_length + offset_x), int(j * sq_length + offset_y),
-                                                 int(sq_length),
-                                                 int(sq_length)))
+                                     pygame.Rect(round(i * sq_length + offset_x), round(j * sq_length + offset_y),
+                                                 round(sq_length),
+                                                 round(sq_length)))
 
         if easing > 0:
             easing -= EASING
@@ -220,10 +226,10 @@ if __name__ == '__main__':
                     tile = Tile.tiles[entry]
                     d_y, d_x = tile.direction
                     move_ease = easing
-                    x = int((i - move_ease * d_x) * sq_length + offset_x)
-                    y = int((j - move_ease * d_y) * sq_length + offset_y)
-                    t_w = int(sq_length * tile.width)
-                    t_h = int(sq_length * tile.height)
+                    x = round((i - move_ease * d_x) * sq_length + offset_x)
+                    y = round((j - move_ease * d_y) * sq_length + offset_y)
+                    t_w = round(sq_length * tile.width)
+                    t_h = round(sq_length * tile.height)
                     pygame.draw.polygon(screen, tile.color, ((x, y), (x + t_w, y), (x + t_w, y + t_h), (x, y + t_h)))
                     pygame.draw.lines(screen, (0, 0, 0), True, ((x, y), (x + t_w, y), (x + t_w, y + t_h), (x, y + t_h)),
                                       2)
