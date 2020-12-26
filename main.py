@@ -166,7 +166,7 @@ if __name__ == '__main__':
     print("Just press space bar to go through the states")
     grid = Grid()
     pygame.init()
-    w, h = 800, 800
+    w, h = 600, 600
     screen = pygame.display.set_mode((w, h))
     terminated = False
     clk = pygame.time.Clock()
@@ -229,7 +229,7 @@ if __name__ == '__main__':
                                      pygame.Rect(x, y, t_w, t_h))
                     pygame.draw.rect(screen, (0, 0, 0),
                                      pygame.Rect(x, y, t_w, t_h), 1)
-                    pygame.draw.polygon(screen, (0, 0, 0), arrow_polygon(x, y, t_w, t_h, tile.direction))
+                    pygame.draw.polygon(screen, (50, 50, 50), arrow_polygon(x, y, t_w, t_h, tile.direction))
                     already_drawn.append(entry)
 
         pygame.display.flip()
