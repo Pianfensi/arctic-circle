@@ -30,28 +30,6 @@ class Tile:
         else:
             self._h = 2
 
-    def blocked(self):
-        for tile_id, tile in Tile.tiles.items():
-            if tile != self:
-                if (tile.x, tile.y) == (self._x + self._direction[0], self._y + self._direction[1]):
-                    if (tile.direction, self._direction) in [(UP, DOWN), (DOWN, UP), (LEFT, RIGHT), (RIGHT, LEFT)]:
-                        return True
-        return False
-
-    def evolve(self):
-        self._x += 1
-        self._y += 1
-
-    def move(self):
-        self._ease += EASING
-        if int(self._ease) != 1:
-            self._moving = True
-            self._x += self._direction[0] * EASING
-            self._y += self._direction[1] * EASING
-        else:
-            self._ease = 0
-            self._moving = False
-
     @property
     def id(self):
         return self._id
@@ -89,7 +67,6 @@ class Grid:
     def __init__(self):
         self._grid = np.ones((2, 2))
         self.set_new_tiles()
-        self._block_free_grid = None
 
     def _set_new_tile(self, x, y):
         if random.choice(COMBINATION) == "v":
