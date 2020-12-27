@@ -9,7 +9,7 @@ LEFT = (-1, 0)
 RIGHT = (1, 0)
 COMBINATION = ["v", "h"]
 COLORS = {UP: (200, 200, 0), DOWN: (200, 0, 0), LEFT: (0, 0, 200), RIGHT: (0, 200, 0)}
-EASING = 1 / 5
+EASING = 1 / 15
 
 
 def arrow_polygon(x, y, w, h, direction):
@@ -187,8 +187,6 @@ if __name__ == '__main__':
     moving = False
     easing = 0
     gen = 1
-
-
     def next_action():
         global easing, action, gen
         if easing == 0:
@@ -209,7 +207,7 @@ if __name__ == '__main__':
             action %= len(action_cycle)
 
 
-    pygame.time.set_timer(pygame.USEREVENT + 1, 100)
+    pygame.time.set_timer(pygame.USEREVENT + 1, 500)
     automated = False
     while not terminated:
         screen.fill((0, 0, 0))
@@ -255,9 +253,11 @@ if __name__ == '__main__':
                     t_w = round(sq_length * tile.width)
                     t_h = round(sq_length * tile.height)
                     pygame.draw.polygon(screen, tile.color, ((x, y), (x + t_w, y), (x + t_w, y + t_h), (x, y + t_h)))
-                    pygame.draw.lines(screen, (0, 0, 0), True, ((x, y), (x + t_w, y), (x + t_w, y + t_h), (x, y + t_h)),
-                                      2)
-                    pygame.draw.polygon(screen, (50, 50, 50), arrow_polygon(x, y, t_w, t_h, tile.direction))
+                    if gen < 70:
+                        pygame.draw.lines(screen, (0, 0, 0), True, ((x, y), (x + t_w, y), (x + t_w, y + t_h), (x, y + t_h)),
+                                          2)
+                    if gen < 50:
+                        pygame.draw.polygon(screen, (50, 50, 50), arrow_polygon(x, y, t_w, t_h, tile.direction))
                     already_drawn.append(entry)
 
         screen.blit(pygame.font.SysFont('arial', 30).render(f"A({gen})", True, (128, 128, 128)), (10, 10))
