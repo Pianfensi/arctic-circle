@@ -46,8 +46,6 @@ class Tile:
         self._direction = direction
         self._w = 1
         self._h = 1
-        self._ease = 0
-        self._moving = False
         if direction in (LEFT, RIGHT):
             self._w = 2
         else:
@@ -80,10 +78,6 @@ class Tile:
     @property
     def direction(self):
         return self._direction
-
-    @property
-    def moving(self):
-        return self._moving
 
 
 class Grid:
