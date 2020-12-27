@@ -113,7 +113,7 @@ class Grid:
         self._new_grid = self._grid.copy()
         self._new_grid = np.where(self._new_grid >= 1, 1, 0)
         self._block_free_grid = self._new_grid.copy()
-        without_blocking = True
+        collision_detected = False
         for y in range(n):
             for x in range(n):
                 tile_id = int(self._grid[y, x])
@@ -128,12 +128,12 @@ class Grid:
                         if (origin_tile.direction, destination_tile.direction) in [(UP, DOWN), (DOWN, UP),
                                                                                    (LEFT, RIGHT), (RIGHT, LEFT)]:
                             blocked = True
-                            without_blocking = False
+                            collision_detected = True
                     if not blocked:
                         self._block_free_grid[y, x] = tile_id
                         self._new_grid[destination] = tile_id
         self._grid = self._block_free_grid
-        return without_blocking
+        return collision_detected
 
     def move_tiles(self):
         self._grid = self._new_grid
@@ -179,6 +179,25 @@ if __name__ == '__main__':
     action = 0
     moving = False
     easing = 0
+    def next_action():
+        global easing, action
+        if easing == 0:
+            if action_cycle[action] == "evolve":
+                grid.evolve()
+            elif action_cycle[action] == "unblock":
+                if not grid.remove_collision():
+                    grid.move_tiles()
+                    easing = 1
+                    action += 1
+            elif action_cycle[action] == "move":
+                grid.move_tiles()
+                easing = 1
+            elif action_cycle[action] == "insert":
+                grid.set_new_tiles()
+            action += 1
+            action %= len(action_cycle)
+    pygame.time.set_timer(pygame.USEREVENT+1, 500)
+    automated = False
     while not terminated:
         screen.fill((0, 0, 0))
         for event in pygame.event.get():
@@ -186,21 +205,14 @@ if __name__ == '__main__':
                 pygame.quit()
                 terminated = True
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                if easing == 0:
-                    if action_cycle[action] == "evolve":
-                        grid.evolve()
-                    elif action_cycle[action] == "unblock":
-                        if grid.remove_collision():
-                            grid.move_tiles()
-                            easing = 1
-                            action += 1
-                    elif action_cycle[action] == "move":
-                        grid.move_tiles()
-                        easing = 1
-                    elif action_cycle[action] == "insert":
-                        grid.set_new_tiles()
-                    action += 1
-                    action %= len(action_cycle)
+                if not automated:
+                    next_action()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+                automated = not automated
+            if event.type == pygame.USEREVENT+1:
+                if automated:
+                    next_action()
+
 
         pressed = pygame.key.get_pressed()
         sq_length = w // grid.size
