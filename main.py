@@ -9,7 +9,7 @@ LEFT = (-1, 0)
 RIGHT = (1, 0)
 COMBINATION = ["v", "h"]
 COLORS = {UP: (200, 200, 0), DOWN: (200, 0, 0), LEFT: (0, 0, 200), RIGHT: (0, 200, 0)}
-EASING = 1 / 15
+EASING = 1 / 5
 
 
 def arrow_polygon(x, y, w, h, direction):
@@ -35,10 +35,12 @@ def arrow_polygon(x, y, w, h, direction):
 
 class Tile:
     tiles = {}
+    auto_increment = 2
 
     def __init__(self, x, y, direction):
-        self._id = len(Tile.tiles) + 2
+        self._id = Tile.auto_increment
         Tile.tiles[self._id] = self
+        Tile.auto_increment += 1
         self._x = x
         self._y = y
         self._direction = direction
@@ -114,6 +116,7 @@ class Grid:
         self._new_grid = np.where(self._new_grid >= 1, 1, 0)
         self._block_free_grid = self._new_grid.copy()
         collision_detected = False
+        blocked_ids = set()
         for y in range(n):
             for x in range(n):
                 tile_id = int(self._grid[y, x])
@@ -129,10 +132,14 @@ class Grid:
                                                                                    (LEFT, RIGHT), (RIGHT, LEFT)]:
                             blocked = True
                             collision_detected = True
+                            blocked_ids.add(tile_id)
+                            blocked_ids.add(dest_id)
                     if not blocked:
                         self._block_free_grid[y, x] = tile_id
                         self._new_grid[destination] = tile_id
         self._grid = self._block_free_grid
+        for blocked_id in blocked_ids:
+            del Tile.tiles[blocked_id]
         return collision_detected
 
     def move_tiles(self):
@@ -180,6 +187,8 @@ if __name__ == '__main__':
     moving = False
     easing = 0
     gen = 1
+
+
     def next_action():
         global easing, action, gen
         if easing == 0:
@@ -198,7 +207,9 @@ if __name__ == '__main__':
                 grid.set_new_tiles()
             action += 1
             action %= len(action_cycle)
-    pygame.time.set_timer(pygame.USEREVENT+1, 500)
+
+
+    pygame.time.set_timer(pygame.USEREVENT + 1, 100)
     automated = False
     while not terminated:
         screen.fill((0, 0, 0))
@@ -211,10 +222,9 @@ if __name__ == '__main__':
                     next_action()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
                 automated = not automated
-            if event.type == pygame.USEREVENT+1:
+            if event.type == pygame.USEREVENT + 1:
                 if automated:
                     next_action()
-
 
         pressed = pygame.key.get_pressed()
         sq_length = w // grid.size
@@ -250,6 +260,6 @@ if __name__ == '__main__':
                     pygame.draw.polygon(screen, (50, 50, 50), arrow_polygon(x, y, t_w, t_h, tile.direction))
                     already_drawn.append(entry)
 
-        screen.blit(pygame.font.SysFont('arial', 30).render(f"A({gen})", True, (128,128,128)), (10,10))
+        screen.blit(pygame.font.SysFont('arial', 30).render(f"A({gen})", True, (128, 128, 128)), (10, 10))
         pygame.display.flip()
         clk.tick(30)
