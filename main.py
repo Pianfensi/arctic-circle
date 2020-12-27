@@ -179,11 +179,13 @@ if __name__ == '__main__':
     action = 0
     moving = False
     easing = 0
+    gen = 1
     def next_action():
-        global easing, action
+        global easing, action, gen
         if easing == 0:
             if action_cycle[action] == "evolve":
                 grid.evolve()
+                gen += 1
             elif action_cycle[action] == "unblock":
                 if not grid.remove_collision():
                     grid.move_tiles()
@@ -248,5 +250,6 @@ if __name__ == '__main__':
                     pygame.draw.polygon(screen, (50, 50, 50), arrow_polygon(x, y, t_w, t_h, tile.direction))
                     already_drawn.append(entry)
 
+        screen.blit(pygame.font.SysFont('arial', 30).render(f"A({gen})", True, (128,128,128)), (10,10))
         pygame.display.flip()
         clk.tick(30)
