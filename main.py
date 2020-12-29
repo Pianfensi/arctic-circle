@@ -7,7 +7,7 @@ UP = (0, -1)
 DOWN = (0, 1)
 LEFT = (-1, 0)
 RIGHT = (1, 0)
-COMBINATION = ["v", "h"]
+probability = 0.5
 COLORS = {UP: (200, 200, 0), DOWN: (200, 0, 0), LEFT: (0, 0, 200), RIGHT: (0, 200, 0)}
 EASING = 1 / 15
 
@@ -88,7 +88,7 @@ class Grid:
         self._new_grid = None
 
     def _set_new_tile(self, x, y):
-        if random.choice(COMBINATION) == "v":
+        if random.random() < probability:
             t1 = Tile(x, y, LEFT)
             t2 = Tile(x + 1, y, RIGHT)
         else:
@@ -173,6 +173,7 @@ if __name__ == '__main__':
     grid = Grid()
     pygame.init()
     w, h = 600, 600
+    slider_x, slider_y = (20, h-40)
     screen = pygame.display.set_mode((w, h))
     terminated = False
     clk = pygame.time.Clock()
@@ -255,5 +256,15 @@ if __name__ == '__main__':
                     already_drawn.append(entry)
 
         screen.blit(pygame.font.SysFont('arial', 30).render(f"A({gen})", True, (128, 128, 128)), (10, 10))
+        screen.blit(pygame.font.SysFont('arial', 20).render(f"horizontally splits", True, (128, 128, 128)), (slider_x, slider_y-30))
+        pygame.draw.polygon(screen, (128,128,128), ((slider_x, slider_y), (slider_x+100, slider_y), (slider_x+100, slider_y+10), (slider_x, slider_y+10)))
+        pygame.draw.circle(screen, (192,192,192), (round(probability*100)+slider_x, slider_y+5), 5)
+        screen.blit(
+            pygame.font.SysFont('arial', 20).render(f"{round(probability*100):02d} %", True, (128, 128, 128)),
+            (round(probability*100)+slider_x, slider_y+10))
+        if pygame.mouse.get_pressed()[0] == 1:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            if slider_x <= mouse_x <= slider_x+100 and slider_y <= mouse_y <= slider_y+10:
+                probability = (mouse_x-slider_x)/100
         pygame.display.flip()
         clk.tick(30)
